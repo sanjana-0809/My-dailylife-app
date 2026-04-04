@@ -1,0 +1,16 @@
+{
+  "name": "life-remind",
+  "version": "1.0.0",
+  "description": "LifeRemind - Personal Voice-Driven Life Tracker",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "init-db": "cd backend && npm run init-db",
+    "seed": "cd backend && npm run seed"
+  },
+  "author": "LifeRemind",
+  "license": "MIT"
+}

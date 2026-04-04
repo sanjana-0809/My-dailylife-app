@@ -1,0 +1,37 @@
+/* globals.css - Additional global styles */
+
+/* Calendar component overrides */
+.react-calendar {
+  border: none !important;
+  border-radius: 12px;
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  width: 100% !important;
+  background: white;
+  padding: 12px;
+}
+
+.react-calendar__tile--active {
+  background: #0a7cff !important;
+  border-radius: 8px;
+}
+
+.react-calendar__tile--now {
+  background: #dfeeff !important;
+  border-radius: 8px;
+}
+
+.react-calendar__tile:hover {
+  background: #f0f7ff !important;
+  border-radius: 8px;
+}
+
+.react-calendar__navigation button {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+/* Toast overrides */
+.toast-custom {
+  font-family: 'DM Sans', system-ui, sans-serif;
+}

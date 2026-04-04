@@ -1,0 +1,9 @@
+{
+  "short_name": "LifeRemind",
+  "name": "LifeRemind - Voice Life Tracker",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0a7cff",
+  "background_color": "#fafbfc"
+}
