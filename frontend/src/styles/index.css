@@ -1,8 +1,8 @@
+/* Fonts are loaded via the <link> tags in index.html */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Base Resets ─── */
 * {
   margin: 0;
   padding: 0;
@@ -10,36 +10,82 @@
 }
 
 body {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background-color: #fafbfc;
-  color: #1a1a2e;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background-color: #0a0e1a;
+  color: #e2e8f0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* ─── Scrollbar Styling ─── */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2d3652; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3d4766; }
 
-/* ─── Custom Utilities ─── */
+/* Glassmorphism utility */
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .glass-dark {
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
-  .glass {
-    background: rgba(255, 255, 255, 0.8);
+  .glass-card {
+    background: rgba(26, 32, 53, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+  .text-balance { text-wrap: balance; }
+  .gradient-border {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
 }
+
+/* Recording animation */
+@keyframes recording-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+}
+.recording-active { animation: recording-pulse 1.5s ease-in-out infinite; }
+
+/* Check animation */
+@keyframes check-pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.check-pop { animation: check-pop 0.3s ease-out; }
+
+/* Streak fire */
+@keyframes streak-fire {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.streak-animate { animation: streak-fire 0.5s ease-in-out; }
+
+/* Timeline dashed line */
+.timeline-line {
+  border-left: 2px dashed #2d3652;
+}
+
+/* React Calendar overrides for dark theme */
+.react-calendar {
+  border: none !important;
+  border-radius: 16px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  width: 100% !important;
+  background: #1a2035 !important;
+  padding: 12px;
+  color: #e2e8f0 !important;
+}
+.react-calendar__tile { color: #94a3b8 !important; border-radius: 12px; }
+.react-calendar__tile--active { background: #c8f169 !important; color: #0a0e1a !important; border-radius: 12px; font-weight: 600; }
+.react-calendar__tile--now { background: #232b3e !important; border-radius: 12px; }
+.react-calendar__tile:hover { background: #2d3652 !important; border-radius: 12px; }
+.react-calendar__navigation button { font-size: 1rem; font-weight: 600; color: #e2e8f0; }
+.react-calendar__navigation button:hover { background: #232b3e !important; border-radius: 12px; }
+.react-calendar__month-view__weekdays { color: #525f7f !important; }
+.react-calendar__month-view__weekdays abbr { text-decoration: none !important; }

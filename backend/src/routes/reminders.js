@@ -108,10 +108,14 @@ router.get('/', asyncHandler(async (req, res) => {
     return res.json(reminders);
   }
 
+  // Clamp pagination to safe bounds to prevent resource exhaustion
+  const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
+  const safeOffset = Math.max(parseInt(offset) || 0, 0);
+
   const reminders = await Reminder.findByUser(req.user.id, {
     status,
-    limit: parseInt(limit),
-    offset: parseInt(offset),
+    limit: safeLimit,
+    offset: safeOffset,
   });
   res.json(reminders);
 }));

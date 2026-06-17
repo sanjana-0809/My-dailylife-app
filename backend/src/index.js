@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 
 // Import middleware
 const logger = require('./middleware/logger');
@@ -25,16 +26,34 @@ const { startScheduler } = require('./services/schedulerService');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ─── Fail fast on missing/insecure critical config ───
+const INSECURE_JWT_DEFAULT = 'dev_jwt_secret_change_in_production_abc123';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('[Config] JWT_SECRET is missing or too short (need >= 32 chars). Refusing to start.');
+  process.exit(1);
+}
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.JWT_SECRET === INSECURE_JWT_DEFAULT) {
+    console.error('[Config] JWT_SECRET is still the development default. Refusing to start in production.');
+    process.exit(1);
+  }
+  if (!process.env.FRONTEND_URL) {
+    console.error('[Config] FRONTEND_URL must be set in production (required for CORS). Refusing to start.');
+    process.exit(1);
+  }
+}
+
 // ─── Security & Parsing Middleware ───
 app.use(helmet());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? process.env.FRONTEND_URL
-    : ['http://localhost:3000', 'http://localhost:5173'],
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use(cookieParser());
 app.use(logger);
 
 // Rate limiting — 100 requests per 15 minutes per IP
@@ -44,6 +63,16 @@ const limiter = rateLimit({
   message: { error: 'Too many requests. Please try again later.' },
 });
 app.use('/api/', limiter);
+
+// Stricter limiter for auth endpoints to throttle brute-force attempts
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  skipSuccessfulRequests: true,
+  message: { error: 'Too many login attempts. Please try again later.' },
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Ensure uploads directory exists
 const fs = require('fs');

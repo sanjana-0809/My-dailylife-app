@@ -1,42 +1,41 @@
-// services/voiceService.js - OpenAI Whisper transcription
-const OpenAI = require('openai');
+// services/voiceService.js - Groq Whisper transcription
+const Groq = require('groq-sdk');
 const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
-let openai = null;
+let groq = null;
 
-/**
- * Initialize OpenAI client (lazy — only when first needed).
- */
 const getClient = () => {
-  if (!openai) {
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.startsWith('sk-your')) {
-      console.warn('[Whisper] OpenAI API key not configured — voice transcription disabled');
+  if (!groq) {
+    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY.startsWith('gsk_your')) {
+      console.warn('[Whisper] Groq API key not configured — voice transcription disabled');
       return null;
     }
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
-  return openai;
+  return groq;
 };
 
-/**
- * Transcribe an audio file using OpenAI Whisper API.
- * @param {string} filePath - Path to the audio file on disk
- * @returns {Promise<string>} Transcribed text
- */
 const transcribeAudio = async (filePath) => {
   const client = getClient();
 
   if (!client) {
-    throw new Error('OpenAI API key not configured. Set OPENAI_API_KEY in .env');
+    throw new Error('Groq API key not configured. Set GROQ_API_KEY in .env');
   }
 
+  let renamedPath = null;
+
   try {
-    console.log('[Whisper] Transcribing:', filePath);
+    console.log('[Whisper] Transcribing via Groq:', filePath);
+
+    // Groq requires a proper file extension — rename the temp file
+    renamedPath = filePath + '.webm';
+    fs.copyFileSync(filePath, renamedPath);
 
     const transcription = await client.audio.transcriptions.create({
-      file: fs.createReadStream(filePath),
-      model: 'whisper-1',
+      file: fs.createReadStream(renamedPath),
+      model: 'whisper-large-v3',
       language: 'en',
       response_format: 'text',
     });
@@ -48,10 +47,9 @@ const transcribeAudio = async (filePath) => {
     console.error('[Whisper] Transcription failed:', err.message);
     throw new Error(`Voice transcription failed: ${err.message}`);
   } finally {
-    // Clean up uploaded temp file
-    try {
-      fs.unlinkSync(filePath);
-    } catch (_) {}
+    // Clean up both files
+    try { fs.unlinkSync(filePath); } catch (_) {}
+    try { if (renamedPath) fs.unlinkSync(renamedPath); } catch (_) {}
   }
 };
 

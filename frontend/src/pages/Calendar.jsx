@@ -1,4 +1,3 @@
-// pages/Calendar.jsx - Calendar view with reminders
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useRemindersContext } from '../context/RemindersContext';
@@ -15,53 +14,29 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => {
-    fetchReminders();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchReminders(); }, []); // eslint-disable-line
 
-  // Filter reminders for selected date
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-  const filteredReminders = reminders.filter((r) => {
-    const rDate = new Date(r.due_date);
-    return format(rDate, 'yyyy-MM-dd') === selectedDateStr;
-  });
+  const filtered = reminders.filter(r => format(new Date(r.due_date), 'yyyy-MM-dd') === selectedDateStr);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800">Calendar</h2>
-        <Button onClick={() => setShowCreate(true)} size="sm">
-          <FiPlus size={14} /> Add
-        </Button>
+        <h2 className="text-xl font-bold text-white font-display">Calendar</h2>
+        <Button onClick={() => setShowCreate(true)} size="sm"><FiPlus size={14} /> Add</Button>
       </div>
-
-      <CalendarGrid
-        reminders={reminders}
-        selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
-      />
-
+      <CalendarGrid reminders={reminders} selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       <section>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <h3 className="text-sm font-bold text-dark-300 uppercase tracking-wider mb-3">
           {format(selectedDate, 'EEEE, MMMM d')}
-          {filteredReminders.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-gray-400">({filteredReminders.length})</span>
-          )}
+          {filtered.length > 0 && <span className="ml-2 text-brand-green">({filtered.length})</span>}
         </h3>
-
-        {loading ? (
-          <Loading />
-        ) : filteredReminders.length === 0 ? (
-          <EmptyState icon="📅" title="No reminders for this date" description="Select another date or create a reminder" />
+        {loading ? <Loading /> : filtered.length === 0 ? (
+          <EmptyState icon="📅" title="No reminders" description="Select another date or create one" />
         ) : (
-          <div className="space-y-2">
-            {filteredReminders.map((r) => (
-              <ReminderCard key={r.id} reminder={r} />
-            ))}
-          </div>
+          <div className="space-y-3">{filtered.map(r => <ReminderCard key={r.id} reminder={r} />)}</div>
         )}
       </section>
-
       {showCreate && <CreateReminder onClose={() => setShowCreate(false)} />}
     </div>
   );

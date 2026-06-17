@@ -17,6 +17,14 @@ export const authService = {
     return data;
   },
 
+  async logout() {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore network/401 errors — clearing local state still logs the user out
+    }
+  },
+
   async updatePhoneToken(phoneToken) {
     const { data } = await api.put('/auth/update-phone-token', { phoneToken });
     return data;

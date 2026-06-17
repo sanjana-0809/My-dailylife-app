@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const { authenticate, generateToken } = require('../middleware/auth');
+const { authenticate, generateToken, setAuthCookie, clearAuthCookie } = require('../middleware/auth');
 const { isValidEmail, isValidPassword } = require('../utils/validators');
 const { asyncHandler } = require('../utils/helpers');
 
@@ -15,7 +15,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Valid email is required' });
   }
   if (!password || !isValidPassword(password)) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
   }
   if (!name || name.trim().length === 0) {
     return res.status(400).json({ error: 'Name is required' });
@@ -35,14 +35,14 @@ router.post('/register', asyncHandler(async (req, res) => {
     await User.updatePhoneToken(user.id, phoneToken);
   }
 
-  // Generate JWT
+  // Generate JWT and set it as an httpOnly cookie
   const token = generateToken(user);
+  setAuthCookie(res, token);
 
   res.status(201).json({
     id: user.id,
     email: user.email,
     name: user.name,
-    token,
   });
 }));
 
@@ -67,18 +67,18 @@ router.post('/login', asyncHandler(async (req, res) => {
   }
 
   const token = generateToken(user);
+  setAuthCookie(res, token);
 
   res.json({
     id: user.id,
     email: user.email,
     name: user.name,
-    token,
   });
 }));
 
-// POST /api/auth/logout — Client-side only (clear token)
+// POST /api/auth/logout — Clear the auth cookie
 router.post('/logout', authenticate, (req, res) => {
-  // JWT is stateless; client just discards the token
+  clearAuthCookie(res);
   res.json({ success: true, message: 'Logged out successfully' });
 });
 

@@ -1,6 +1,21 @@
 node_modules/
+
+# Env / secrets
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+serviceAccount*.json
+firebase-adminsdk*.json
+
+# Build output
 build/
+dist/
+
+# Runtime / misc
 uploads/
 *.log
 .DS_Store
+.vite/
+coverage/

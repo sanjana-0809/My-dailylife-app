@@ -19,10 +19,11 @@ router.patch('/:reminderId/done', asyncHandler(async (req, res) => {
 
 // PATCH /api/notifications/:reminderId/snooze — Snooze reminder (delay by 15 min)
 router.patch('/:reminderId/snooze', asyncHandler(async (req, res) => {
-  const { minutes = 15 } = req.body;
+  // Validate snooze duration: positive integer, capped at 24h
+  const minutes = Math.min(Math.max(parseInt(req.body.minutes) || 15, 1), 1440);
 
   const result = await query(
-    `UPDATE reminders 
+    `UPDATE reminders
      SET due_time = due_time + ($1 || ' minutes')::interval,
          last_notified = NULL,
          status = 'active',
@@ -41,7 +42,7 @@ router.patch('/:reminderId/snooze', asyncHandler(async (req, res) => {
 
 // GET /api/notifications/history — Notification delivery history
 router.get('/history', asyncHandler(async (req, res) => {
-  const { limit = 20 } = req.query;
+  const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100);
 
   const result = await query(
     `SELECT nl.*, r.title as reminder_title, h.title as habit_title

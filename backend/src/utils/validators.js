@@ -9,10 +9,10 @@ const isValidEmail = (email) => {
 };
 
 /**
- * Validate password strength (min 6 chars).
+ * Validate password strength (min 8 chars).
  */
 const isValidPassword = (password) => {
-  return typeof password === 'string' && password.length >= 6;
+  return typeof password === 'string' && password.length >= 8;
 };
 
 /**
