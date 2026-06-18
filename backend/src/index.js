@@ -106,13 +106,20 @@ app.use('/api/habits', habitRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// ─── Serve React Frontend in Production ───
-if (process.env.NODE_ENV === 'production') {
+// ─── Serve React Frontend in Production (only if a build exists) ───
+// On an API-only host (e.g. Render) there is no frontend/build, so guard the
+// catch-all to avoid ENOENT errors on every non-API request.
+const frontendIndex = path.join(__dirname, '../../frontend/build/index.html');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(frontendIndex)) {
   const frontendPath = path.join(__dirname, '../../frontend/build');
   app.use(express.static(frontendPath));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    res.sendFile(frontendIndex);
   });
+} else {
+  // API-only: friendly root, JSON 404 for everything else
+  app.get('/', (req, res) => res.json({ service: 'LifeRemind API', status: 'ok' }));
+  app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 }
 
 // ─── Error Handler (must be last middleware) ───
