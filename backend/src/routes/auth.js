@@ -35,7 +35,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     await User.updatePhoneToken(user.id, phoneToken);
   }
 
-  // Generate JWT and set it as an httpOnly cookie
+  // Generate JWT — set as httpOnly cookie (web) and return it (native/Bearer)
   const token = generateToken(user);
   setAuthCookie(res, token);
 
@@ -43,6 +43,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     id: user.id,
     email: user.email,
     name: user.name,
+    token,
   });
 }));
 
@@ -73,6 +74,7 @@ router.post('/login', asyncHandler(async (req, res) => {
     id: user.id,
     email: user.email,
     name: user.name,
+    token,
   });
 }));
 
