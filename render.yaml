@@ -1,0 +1,35 @@
+# Render Blueprint — provisions the LifeRemind API + a Postgres database.
+# Deploy: Render Dashboard → New → Blueprint → connect this repo → Apply.
+services:
+  - type: web
+    name: liferemind-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Auto-generated secure value (satisfies the >=32 char startup check)
+      - key: JWT_SECRET
+        generateValue: true
+      # CORS allow-list. https://localhost is the Capacitor (APK) origin.
+      # Add your web frontend URL here later, comma-separated.
+      - key: FRONTEND_URL
+        value: https://localhost
+      # Wired automatically from the database below (internal URL, no SSL needed)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: liferemind-db
+          property: connectionString
+      # Optional — set your (rotated) Groq key in the dashboard to enable voice
+      - key: GROQ_API_KEY
+        sync: false
+
+databases:
+  - name: liferemind-db
+    plan: free
+    databaseName: life_remind
+    user: liferemind

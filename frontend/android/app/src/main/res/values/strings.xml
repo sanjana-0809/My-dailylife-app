@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LifeRemind</string>
+    <string name="title_activity_main">LifeRemind</string>
+    <string name="package_name">com.liferemind.app</string>
+    <string name="custom_url_scheme">com.liferemind.app</string>
+</resources>

@@ -2,12 +2,17 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Managed Postgres providers (Render's external URL, Heroku, etc.) require SSL.
+// Set DATABASE_SSL=true for those; leave unset for local Docker / Render internal URL.
+const useSSL = process.env.DATABASE_SSL === 'true';
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: useSSL ? { rejectUnauthorized: false } : false,
   // Connection pool settings for production resilience
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Log when pool connects successfully
