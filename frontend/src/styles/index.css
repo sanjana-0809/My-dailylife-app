@@ -37,6 +37,13 @@ body {
     -webkit-backdrop-filter: blur(12px);
   }
   .text-balance { text-wrap: balance; }
+  /* Safe-area insets for notch / status bar / gesture bar (Capacitor app) */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-header { padding-top: calc(4rem + env(safe-area-inset-top) + 0.5rem); }
+  .pb-bottomnav { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   .gradient-border {
     border: 1px solid transparent;
     background-clip: padding-box;

@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
 const AppLayout = ({ children }) => (
   <>
     <Navigation />
-    <main className="pt-20 pb-8 px-4 lg:pl-60 lg:pr-6 max-w-4xl lg:max-w-3xl mx-auto lg:mx-0 lg:ml-56">
+    <main className="pt-header pb-bottomnav px-4 lg:pt-20 lg:pb-8 lg:pl-60 lg:pr-6 max-w-4xl lg:max-w-3xl mx-auto lg:mx-0 lg:ml-56">
       {children}
     </main>
   </>

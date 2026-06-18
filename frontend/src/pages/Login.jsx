@@ -54,7 +54,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && <Input label="Full Name" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" autoFocus />}
             <Input label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoFocus={!isRegister} />
-            <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" />
+            <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" />
             <Button type="submit" loading={loading} className="w-full" size="lg">
               {isRegister ? 'Create Account' : 'Sign In'}
             </Button>

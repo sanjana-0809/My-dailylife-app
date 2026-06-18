@@ -29,7 +29,7 @@ const CreateHabit = ({ onClose, onCreate }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-dark-800 rounded-3xl shadow-2xl border border-dark-500 w-full max-w-md animate-slide-up" onClick={e => e.stopPropagation()}>
+      <div className="bg-dark-800 rounded-3xl shadow-2xl border border-dark-500 w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-up" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-dark-600">
           <h3 className="text-lg font-bold text-white font-display">New Habit</h3>
           <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-surface-light text-dark-300"><FiX size={18} /></button>
