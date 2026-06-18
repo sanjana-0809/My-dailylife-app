@@ -65,7 +65,10 @@ app.use(logger);
 // Health check — defined before the limiter so Render's frequent uptime probes
 // are never rate-limited (a 429 here makes Render mark the instance failed).
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const key = process.env.GROQ_API_KEY;
+  // Safe boolean only — never exposes the key itself
+  const voiceEnabled = !!key && !key.startsWith('gsk_your');
+  res.json({ status: 'ok', voiceEnabled, timestamp: new Date().toISOString() });
 });
 
 // Rate limiting — 300 requests per 15 minutes per IP (health check exempt)
