@@ -1,14 +1,19 @@
 // services/voiceService.js - Groq Whisper transcription
 const Groq = require('groq-sdk');
 const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 let groq = null;
 
+/** Whether a usable Groq API key is configured. */
+const isVoiceConfigured = () => {
+  const key = process.env.GROQ_API_KEY;
+  return !!key && !key.startsWith('gsk_your');
+};
+
 const getClient = () => {
   if (!groq) {
-    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY.startsWith('gsk_your')) {
+    if (!isVoiceConfigured()) {
       console.warn('[Whisper] Groq API key not configured — voice transcription disabled');
       return null;
     }
@@ -17,21 +22,44 @@ const getClient = () => {
   return groq;
 };
 
-const transcribeAudio = async (filePath) => {
+// Map upload mimetypes to the file extension Groq/Whisper expects.
+const MIME_TO_EXT = {
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/wave': 'wav',
+  'audio/mp3': 'mp3',
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/m4a': 'm4a',
+  'audio/x-m4a': 'm4a',
+};
+
+/**
+ * Transcribe an audio file via Groq Whisper.
+ * @param {string} filePath - Path to the uploaded temp file
+ * @param {string} mimetype - Original upload mimetype (to pick the right extension)
+ * @returns {Promise<string>} Transcribed text (may be empty)
+ * @throws Error with statusCode 503 (not configured) or 502 (transcription failed)
+ */
+const transcribeAudio = async (filePath, mimetype = 'audio/webm') => {
   const client = getClient();
 
   if (!client) {
-    throw new Error('Groq API key not configured. Set GROQ_API_KEY in .env');
+    const err = new Error('Voice transcription is not set up on the server.');
+    err.statusCode = 503;
+    throw err;
   }
 
   let renamedPath = null;
 
   try {
-    console.log('[Whisper] Transcribing via Groq:', filePath);
-
-    // Groq requires a proper file extension — rename the temp file
-    renamedPath = filePath + '.webm';
+    // Groq detects format from the extension — derive it from the real mimetype
+    const ext = MIME_TO_EXT[mimetype] || 'webm';
+    renamedPath = `${filePath}.${ext}`;
     fs.copyFileSync(filePath, renamedPath);
+    console.log(`[Whisper] Transcribing via Groq (${ext}):`, filePath);
 
     const transcription = await client.audio.transcriptions.create({
       file: fs.createReadStream(renamedPath),
@@ -42,10 +70,12 @@ const transcribeAudio = async (filePath) => {
 
     const text = typeof transcription === 'string' ? transcription : transcription.text;
     console.log('[Whisper] Result:', text);
-    return text.trim();
+    return (text || '').trim();
   } catch (err) {
     console.error('[Whisper] Transcription failed:', err.message);
-    throw new Error(`Voice transcription failed: ${err.message}`);
+    const e = new Error('Voice transcription failed. Please try again.');
+    e.statusCode = 502;
+    throw e;
   } finally {
     // Clean up both files
     try { fs.unlinkSync(filePath); } catch (_) {}
@@ -53,4 +83,4 @@ const transcribeAudio = async (filePath) => {
   }
 };
 
-module.exports = { transcribeAudio };
+module.exports = { transcribeAudio, isVoiceConfigured };

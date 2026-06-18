@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const Reminder = require('../models/Reminder');
 const { authenticate } = require('../middleware/auth');
-const { transcribeAudio } = require('../services/voiceService');
+const { transcribeAudio, isVoiceConfigured } = require('../services/voiceService');
 const { parseReminderText } = require('../services/dateParser');
 const { validateReminderInput } = require('../utils/validators');
 const { asyncHandler } = require('../utils/helpers');
@@ -33,11 +33,21 @@ router.post('/voice', upload.single('audioFile'), asyncHandler(async (req, res) 
     return res.status(400).json({ error: 'Audio file is required' });
   }
 
+  // Clear, client-visible message when the server has no Groq key configured
+  if (!isVoiceConfigured()) {
+    return res.status(503).json({ error: 'Voice input is not set up on the server yet. Add a reminder by typing instead.' });
+  }
+
   // Step 1: Transcribe audio to text
-  const transcription = await transcribeAudio(req.file.path);
+  let transcription;
+  try {
+    transcription = await transcribeAudio(req.file.path, req.file.mimetype);
+  } catch (err) {
+    return res.status(err.statusCode || 502).json({ error: err.message });
+  }
 
   if (!transcription) {
-    return res.status(422).json({ error: 'Could not transcribe audio. Please try again.' });
+    return res.status(422).json({ error: "Couldn't understand the audio. Please try again." });
   }
 
   // Step 2: Parse natural language into structured reminder data
