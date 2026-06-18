@@ -18,12 +18,33 @@ const { format, addDays, addWeeks, addMonths } = require('date-fns');
  * @param {string} text - Natural language input
  * @returns {object} Parsed reminder data
  */
+/**
+ * Normalize colloquial time-of-day phrases into something chrono understands.
+ *   "evening 8" / "8 in the evening" → "8 PM"
+ *   "morning 7" / "7 in the morning" → "7 AM"
+ *   "afternoon 3", "night 9", "tonight 8" → PM
+ */
+const normalizeTimePhrases = (text) => {
+  let t = text;
+
+  // "<tod> <hour>"  e.g. "evening 8", "morning 7", "afternoon 3"
+  t = t.replace(/\b(morning)\s+(\d{1,2})(:\d{2})?\b/gi, (_, _tod, h, min) => `${h}${min || ''} AM`);
+  t = t.replace(/\b(afternoon|evening|night|tonight)\s+(\d{1,2})(:\d{2})?\b/gi, (_, _tod, h, min) => `${h}${min || ''} PM`);
+
+  // "<hour> [in the] <tod>"  e.g. "8 in the evening", "7 in the morning", "8 evening"
+  t = t.replace(/\b(\d{1,2})(:\d{2})?\s+(?:in the\s+)?(morning)\b/gi, (_, h, min) => `${h}${min || ''} AM`);
+  t = t.replace(/\b(\d{1,2})(:\d{2})?\s+(?:in the\s+)?(afternoon|evening|night)\b/gi, (_, h, min) => `${h}${min || ''} PM`);
+
+  return t;
+};
+
 const parseReminderText = (text) => {
   if (!text || !text.trim()) {
     throw new Error('Empty text — nothing to parse');
   }
 
-  const input = text.trim();
+  const original = text.trim();
+  const input = normalizeTimePhrases(original);
 
   // --- Step 1: Detect recurrence keywords ---
   let isRecurring = false;
@@ -80,11 +101,14 @@ const parseReminderText = (text) => {
     .replace(/\b(every\s*(monday|tuesday|wednesday|thursday|friday|saturday|sunday))\b/gi, '')
     .replace(/\b(today|tomorrow|tonight)\b/gi, '')
     .replace(/\b(in\s+\d+\s*(day|days|week|weeks|month|months|hour|hours|minute|minutes))\b/gi, '')
+    .replace(/\b(at\s+)?(morning|afternoon|evening|night)\b/gi, '')
+    .replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 
   // If title extraction removed everything, use the original text
   if (!title || title.length < 2) {
-    title = input;
+    title = original;
   }
 
   // Capitalize first letter
@@ -96,7 +120,7 @@ const parseReminderText = (text) => {
     dueTime,
     isRecurring,
     frequency,
-    originalText: input,
+    originalText: original,
   };
 };
 
