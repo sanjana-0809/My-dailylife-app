@@ -26,6 +26,12 @@ const { startScheduler } = require('./services/schedulerService');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Behind Render's reverse proxy: trust the first proxy hop so req.ip reflects
+// the real client (X-Forwarded-For). Required for correct per-IP rate limiting.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // ─── Fail fast on missing/insecure critical config ───
 const INSECURE_JWT_DEFAULT = 'dev_jwt_secret_change_in_production_abc123';
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -56,10 +62,19 @@ app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(cookieParser());
 app.use(logger);
 
-// Rate limiting — 100 requests per 15 minutes per IP
+// Health check — defined before the limiter so Render's frequent uptime probes
+// are never rate-limited (a 429 here makes Render mark the instance failed).
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Rate limiting — 300 requests per 15 minutes per IP (health check exempt)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.originalUrl.split('?')[0] === '/api/health',
   message: { error: 'Too many requests. Please try again later.' },
 });
 app.use('/api/', limiter);
@@ -87,11 +102,6 @@ app.use('/api/reminders', reminderRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 // ─── Serve React Frontend in Production ───
 if (process.env.NODE_ENV === 'production') {
